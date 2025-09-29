@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import axios from 'axios';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,47 +20,51 @@ export default function CartPage() {
   );
 
   return (
-    <main className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        Quick Shoping Cart Page
-      </h1>
-      <div className="max-w-2xl mx-auto">
-        <Card>
+    <main className="min-h-screen bg-gray-900 py-12 px-6 text-white">
+      <h1 className="text-3xl font-bold mb-8 text-center">Shopping Cart</h1>
+      <div className="max-w-3xl mx-auto">
+        <Card className="bg-gray-800 shadow-lg rounded-xl border border-gray-700">
           <CardHeader>
-            <CardTitle>Cart Items ({cart.length})</CardTitle>
+            <CardTitle className="text-xl font-bold text-white">
+              Cart Items ({cart.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {cart.length === 0 ? (
-              <p className="text-center text-gray-800">Your cart is empty.</p>
+              <p className="text-center text-gray-400">Your cart is empty.</p>
             ) : (
               <>
-                <ul className="divide-y divide-gray-600 mb-4">
+                <ul className="divide-y divide-gray-700 mb-6">
                   {cart.map((item, i) => (
                     <li
                       key={i}
-                      className="py-3 flex justify-between items-center">
+                      className="py-4 flex justify-between items-center hover:bg-gray-700 rounded px-2 transition">
                       <div>
-                        <div className="font-semibold">{item.product.name}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="font-semibold text-white">
+                          {item.product.name}
+                        </div>
+                        <div className="text-gray-400 text-sm">
                           {item.product.description}
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="font-semibold">
+                        <span className="font-semibold text-white">
                           ${(item.product.price / 100).toFixed(2)}
                         </span>
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => decreaseQuantity(item.product.id)}>
+                            onClick={() => decreaseQuantity(item.product.id)}
+                            className="text-white border-gray-500 hover:border-white hover:text-white">
                             -
                           </Button>
-                          <span>{item.quantity}</span>
+                          <span className="text-white">{item.quantity}</span>
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => increaseQuantity(item.product.id)}>
+                            onClick={() => increaseQuantity(item.product.id)}
+                            className="text-white border-gray-500 hover:border-white hover:text-white">
                             +
                           </Button>
                         </div>
@@ -75,21 +78,23 @@ export default function CartPage() {
                     </li>
                   ))}
                 </ul>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="font-bold">Total:</span>
-                  <span className="font-bold text-lg">
+
+                <div className="flex justify-between items-center mb-6 text-white">
+                  <span className="font-bold text-lg">Total:</span>
+                  <span className="font-bold text-xl">
                     ${(total / 100).toFixed(2)}
                   </span>
                 </div>
-                <div className="flex gap-4">
+
+                <div className="flex gap-4 flex-col sm:flex-row">
                   <Button
                     variant="outline"
-                    onClick={clearCart}
-                    className="flex-1">
+                    className="flex-1 text-white border-gray-500 hover:border-white"
+                    onClick={clearCart}>
                     Clear Cart
                   </Button>
                   <Button
-                    className="w-full flex-1"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={async () => {
                       const email = window.prompt(
                         'Enter your email address for the receipt:'
@@ -100,7 +105,6 @@ export default function CartPage() {
                       }
                       try {
                         const res = await checkout(cart, email);
-
                         if (res) {
                           window.location.href = res.url;
                         } else {
@@ -121,4 +125,3 @@ export default function CartPage() {
     </main>
   );
 }
-  

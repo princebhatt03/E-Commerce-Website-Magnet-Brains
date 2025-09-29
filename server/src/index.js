@@ -9,10 +9,9 @@ const app = express();
 
 app.use(cors());
 dotenv.config();
-const MONGO_URI = process.env.MONGO_URI ;
+const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = 'ecomm';
 let db, ordersCol;
-
 
 async function connectDB() {
   try {
@@ -27,35 +26,44 @@ async function connectDB() {
   }
 }
 
-
-
-// Stripe webhook endpoint (must be before express.json())
-app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+// Stripe webhook endpoint
+app.post(
+  '/api/stripe-webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    // Handle event
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      await orderController.updateStatus(ordersCol, session.id, 'success');
+    } else if (event.type === 'checkout.session.async_payment_failed') {
+      const session = event.data.object;
+      await orderController.updateStatus(ordersCol, session.id, 'failed');
+    }
+    res.json({ received: true });
   }
-  // Handle event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    await orderController.updateStatus(ordersCol, session.id, 'success');
-  } else if (event.type === 'checkout.session.async_payment_failed') {
-    const session = event.data.object;
-    await orderController.updateStatus(ordersCol, session.id, 'failed');
-  }
-  res.json({ received: true });
-});
+);
 
 app.use(express.json());
 // Mount routes
-app.use('/api/orders', (req, res, next) => orderRoutes(ordersCol)(req, res, next));
-
+app.use('/api/orders', (req, res, next) =>
+  orderRoutes(ordersCol)(req, res, next)
+);
 
 import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY , { apiVersion: '2023-08-16' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-08-16',
+});
 
 // Stripe checkout endpoint
 app.post('/api/checkout', async (req, res) => {
@@ -96,10 +104,9 @@ app.post('/api/checkout', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) {
     res.status(500).json({ error: err.message });
-    console.log(err.message)
+    console.log(err.message);
   }
 });
-
 
 const PORT = process.env.PORT || 4000;
 connectDB().then(() => {

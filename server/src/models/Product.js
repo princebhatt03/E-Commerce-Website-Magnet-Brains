@@ -1,4 +1,3 @@
-// Product model
 export default class Product {
   constructor({_id, name, price, description, image}) {
     this.id = _id?.toString() || undefined;
